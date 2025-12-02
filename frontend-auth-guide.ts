@@ -1,6 +1,6 @@
 /**
  * Frontend Authentication Guide for Token-based Authentication
- * 
+ *
  * This guide explains how to implement authentication with access and refresh tokens
  * in a TypeScript frontend application.
  */
@@ -24,9 +24,9 @@ interface RefreshResponse {
 
 // 2. Token Management Class
 class TokenManager {
-  private static ACCESS_TOKEN_KEY = 'access_token';
-  private static REFRESH_TOKEN_KEY = 'refresh_token';
-  private static USER_KEY = 'user';
+  private static ACCESS_TOKEN_KEY = "access_token";
+  private static REFRESH_TOKEN_KEY = "refresh_token";
+  private static USER_KEY = "user";
 
   static setTokens(accessToken: string, refreshToken: string, user: any): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
@@ -56,24 +56,28 @@ class TokenManager {
 
 // 3. Authentication Service
 class AuthService {
-  private baseUrl = 'http://localhost:5000/api/auth'; // Adjust to your API base URL
+  private baseUrl = "http://localhost:5000/api/auth";
 
   /**
    * Register a new user
    */
-  async register(name: string, email: string, password: string): Promise<AuthResponse> {
+  async register(
+    name: string,
+    email: string,
+    password: string
+  ): Promise<AuthResponse> {
     const response = await fetch(`${this.baseUrl}/register`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ name, email, password }),
     });
 
     const data = await response.json();
-    
+
     if (!data.success) {
-      throw new Error(data.message || 'Registration failed');
+      throw new Error(data.message || "Registration failed");
     }
 
     return data;
@@ -84,17 +88,17 @@ class AuthService {
    */
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await fetch(`${this.baseUrl}/login`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
-    
+
     if (!data.success) {
-      throw new Error(data.message || 'Login failed');
+      throw new Error(data.message || "Login failed");
     }
 
     // Store tokens and user data
@@ -108,25 +112,25 @@ class AuthService {
    */
   async refreshAccessToken(): Promise<RefreshResponse> {
     const refreshToken = TokenManager.getRefreshToken();
-    
+
     if (!refreshToken) {
-      throw new Error('No refresh token available');
+      throw new Error("No refresh token available");
     }
 
     const response = await fetch(`${this.baseUrl}/refresh`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ refreshToken }),
     });
 
     const data = await response.json();
-    
+
     if (!data.success) {
       // Clear tokens if refresh fails
       TokenManager.clearTokens();
-      throw new Error(data.message || 'Token refresh failed');
+      throw new Error(data.message || "Token refresh failed");
     }
 
     // Update access token using the TokenManager's method indirectly
@@ -151,15 +155,15 @@ class AuthService {
     if (accessToken && refreshToken) {
       try {
         await fetch(`${this.baseUrl}/logout`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({ refreshToken }),
         });
       } catch (error) {
-        console.error('Logout request failed:', error);
+        console.error("Logout request failed:", error);
       }
     }
 
@@ -170,76 +174,84 @@ class AuthService {
 
 // 4. HTTP Client with Automatic Token Refresh
 class HttpClient {
-  private baseUrl = 'http://localhost:5000'; // Adjust to your API base URL
+  private baseUrl = "http://localhost:5000"; // Adjust to your API base URL
   private authService = new AuthService();
 
   async request(endpoint: string, options: RequestInit = {}): Promise<any> {
     const accessToken = TokenManager.getAccessToken();
-    
+
     // Add authorization header if token exists
     if (accessToken) {
       options.headers = {
         ...options.headers,
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       };
     }
 
     // Set default content type
-    if (options.method && ['POST', 'PUT', 'PATCH'].includes(options.method)) {
+    if (options.method && ["POST", "PUT", "PATCH"].includes(options.method)) {
       options.headers = {
         ...options.headers,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
     }
 
     let response = await fetch(`${this.baseUrl}${endpoint}`, options);
-    
+
     // If unauthorized, try to refresh token
     if (response.status === 401) {
       try {
         await this.authService.refreshAccessToken();
-        
+
         // Retry the request with new token
         const newAccessToken = TokenManager.getAccessToken();
         if (newAccessToken) {
           options.headers = {
             ...options.headers,
-            'Authorization': `Bearer ${newAccessToken}`,
+            Authorization: `Bearer ${newAccessToken}`,
           };
         }
-        
+
         response = await fetch(`${this.baseUrl}${endpoint}`, options);
       } catch (error) {
         // If refresh fails, redirect to login
         TokenManager.clearTokens();
-        window.location.href = '/login';
+        window.location.href = "/login";
         throw error;
       }
     }
 
     const data = await response.json();
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw new Error(data.message || "Request failed");
     }
 
     return data;
   }
 
   get(endpoint: string, options: RequestInit = {}) {
-    return this.request(endpoint, { ...options, method: 'GET' });
+    return this.request(endpoint, { ...options, method: "GET" });
   }
 
   post(endpoint: string, body: any, options: RequestInit = {}) {
-    return this.request(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) });
+    return this.request(endpoint, {
+      ...options,
+      method: "POST",
+      body: JSON.stringify(body),
+    });
   }
 
   put(endpoint: string, body: any, options: RequestInit = {}) {
-    return this.request(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) });
+    return this.request(endpoint, {
+      ...options,
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
   }
 
   delete(endpoint: string, options: RequestInit = {}) {
-    return this.request(endpoint, { ...options, method: 'DELETE' });
+    return this.request(endpoint, { ...options, method: "DELETE" });
   }
 }
 
@@ -253,10 +265,10 @@ const httpClient = new HttpClient();
 async function handleRegister(name: string, email: string, password: string) {
   try {
     const response = await authService.register(name, email, password);
-    console.log('Registration successful:', response.user);
+    console.log("Registration successful:", response.user);
     // Redirect to dashboard or show success message
   } catch (error: any) {
-    console.error('Registration failed:', error.message);
+    console.error("Registration failed:", error.message);
     // Show error to user
   }
 }
@@ -265,10 +277,10 @@ async function handleRegister(name: string, email: string, password: string) {
 async function handleLogin(email: string, password: string) {
   try {
     const response = await authService.login(email, password);
-    console.log('Login successful:', response.user);
+    console.log("Login successful:", response.user);
     // Redirect to dashboard
   } catch (error: any) {
-    console.error('Login failed:', error.message);
+    console.error("Login failed:", error.message);
     // Show error to user
   }
 }
@@ -276,10 +288,10 @@ async function handleLogin(email: string, password: string) {
 // Example: Making Authenticated API Requests
 async function fetchUserProfile() {
   try {
-    const response = await httpClient.get('/api/users/profile');
-    console.log('User profile:', response.data);
+    const response = await httpClient.get("/api/users/profile");
+    console.log("User profile:", response.data);
   } catch (error: any) {
-    console.error('Failed to fetch profile:', error.message);
+    console.error("Failed to fetch profile:", error.message);
   }
 }
 
@@ -287,10 +299,10 @@ async function fetchUserProfile() {
 async function handleLogout() {
   try {
     await authService.logout();
-    console.log('Logged out successfully');
+    console.log("Logged out successfully");
     // Redirect to login page
   } catch (error: any) {
-    console.error('Logout failed:', error.message);
+    console.error("Logout failed:", error.message);
   }
 }
 
@@ -302,22 +314,22 @@ function isAuthenticated(): boolean {
 // Example usage in a React component
 // function ProtectedComponent() {
 //   const [user, setUser] = useState(null);
-//   
+//
 //   useEffect(() => {
 //     if (!isAuthenticated()) {
 //       // Redirect to login
 //       window.location.href = '/login';
 //       return;
 //     }
-//     
+//
 //     const currentUser = TokenManager.getUser();
 //     setUser(currentUser);
 //   }, []);
-//   
+//
 //   if (!isAuthenticated()) {
 //     return null; // or redirect component
 //   }
-//   
+//
 //   return (
 //     <div>
 //       <h1>Welcome, {user?.name}!</h1>
@@ -335,10 +347,10 @@ function setupAutoRefresh() {
       const refreshToken = TokenManager.getRefreshToken();
       if (refreshToken) {
         await authService.refreshAccessToken();
-        console.log('Token refreshed automatically');
+        console.log("Token refreshed automatically");
       }
     } catch (error) {
-      console.error('Auto-refresh failed:', error);
+      console.error("Auto-refresh failed:", error);
     }
   }, 14 * 60 * 1000); // 14 minutes
 }
@@ -354,5 +366,5 @@ export {
   handleRegister,
   handleLogin,
   handleLogout,
-  fetchUserProfile
+  fetchUserProfile,
 };

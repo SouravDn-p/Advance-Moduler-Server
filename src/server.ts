@@ -2,10 +2,10 @@ import mongoose from "mongoose";
 import app from "./app/app";
 import { config } from "./app/configs";
 
-
-mongoose.connect(config.mongoUri, {
-  serverSelectionTimeoutMS: 10000, // Increased to 10 seconds
-})
+mongoose
+  .connect(config.mongoUri, {
+    serverSelectionTimeoutMS: 10000,
+  })
   .then(() => {
     console.log("✅ MongoDB connected successfully");
     app.listen(config.port, () => {
@@ -18,17 +18,17 @@ mongoose.connect(config.mongoUri, {
   });
 
 // Handle MongoDB connection events
-mongoose.connection.on('error', err => {
-  console.error('MongoDB connection error:', err);
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB connection error:", err);
 });
 
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
+mongoose.connection.on("disconnected", () => {
+  console.log("MongoDB disconnected");
 });
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   await mongoose.connection.close();
-  console.log('MongoDB connection closed through app termination');
+  console.log("MongoDB connection closed through app termination");
   process.exit(0);
 });
