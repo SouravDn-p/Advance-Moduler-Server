@@ -1,19 +1,6 @@
-import { Schema, model } from "mongoose";
+import { model } from "mongoose";
 import bcrypt from "bcrypt";
-
-interface IUser {
-  name: string;
-  email: string;
-  password: string;
-  refreshTokens?: string[];
-}
-
-const userSchema = new Schema<IUser>({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  refreshTokens: [{ type: String }]
-});
+import { IUser, userSchema } from "../user/user.model";
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
