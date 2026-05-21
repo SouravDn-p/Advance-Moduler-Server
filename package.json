@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "dev": "node api.js && node init && ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "node api.js && node init && tsc",
+    "start": "node api.js && node init && node dist/server.js",
     "test:db": "ts-node test-db-connection.ts"
   },
   "keywords": [],
